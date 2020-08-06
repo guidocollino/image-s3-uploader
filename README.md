@@ -8,6 +8,10 @@ Local network upload speed is 200mbps.
 	Allocate no more than 50% of bandwidth resources for file uploads at any time.
 	Application will receive roughly 1,000 images per minute but can also receive bursts of many more that we'll need to handle.
 
+## Flow Diagram
+
+![image](./flow_diagram.jpg)
+
 ## Installation and Start
 
 - Install dependencies with
@@ -21,7 +25,7 @@ iex -S mix
 
 ## Test
 
-- With this script you can simulate a light load: 1000 images and 50 devices 
+- With this script you can simulate a light load: 1000 images and 10 devices 
 ```console
 > ./test/light_load_test.sh
 ``` 

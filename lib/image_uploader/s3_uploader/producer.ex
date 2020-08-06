@@ -15,7 +15,7 @@ defmodule ImageUploader.S3Uploader.Producer do
   end
 
   @doc """
-  Adds new events
+  Adds new events to the buffer
   """
   def add(events), do: GenServer.cast(__MODULE__, {:add, events})
 
