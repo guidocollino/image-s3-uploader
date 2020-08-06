@@ -7,49 +7,26 @@ defmodule ImageUploader.Router do
   plug(:match)
 
   plug(Plug.Parsers,
-    parsers: [:urlencoded, :multipart, :json],
-    pass: ["*/*"],
-    json_decoder: Poison
+    parsers: [:multipart],
+    pass: ["*/*"]
   )
 
   plug(:dispatch)
 
-  post "/images/upload" do
-    {:ok, body, conn} = read_body(conn)
+  post "/api/images/upload" do
 
-    IO.inspect(body, label: "BODY PARAMS")
+    {status, message} =
+      case conn.body_params do
+        %{"device_id" => _device_id, "image" => _image} = params ->
+          ImageUploader.Controller.image_upload(params)
+          {200, "Image recived"}
 
-    ImageUploader.Controller.image_upload(body)
+        _ ->
+          {401, "Bad Request"}
+      end
 
-    # case body do
-    #     %{"device_id" => device_id, "image_file" => image_file} -> {200, process_events(events)}
-    #     _ -> {422, missing_events()}
-    #   end
-
-    # IO.inspect(body)
-
-    send_resp(conn, 201, "OK")
+    send_resp(conn, status, message)
   end
-
-  post "/images/upload_fake" do
-    {:ok, body, conn} = read_body(conn)
-
-    ImageUploader.Controller.image_upload(body)
-
-    send_resp(conn, 201, "OK")
-  end
-
-  # post "/events" do
-  #   {status, body} =
-  #     case conn.body_params do
-  #       %{"events" => events} -> {200, process_events(events)}
-  #       _ -> {422, missing_events()}
-  #     end
-
-  #   send_resp(conn, status, body)
-  # end
-
-  # "Default" route that will get called when no other route is matched
 
   match _ do
     send_resp(conn, 404, "not found")
