@@ -1,15 +1,14 @@
 defmodule ImageUploader.S3Uploader.ConsumersSupervisor do
-  use DynamicSupervisor
+  use ConsumerSupervisor
+  alias ImageUploader.S3Uploader.{Producer, Uploader}
 
-  def start_link(_) do
-    DynamicSupervisor.start_link(__MODULE__, :ok, name: __MODULE__)
+  def start_link(arg) do
+    ConsumerSupervisor.start_link(__MODULE__, arg)
   end
 
-  def init(:ok), do: DynamicSupervisor.init(strategy: :one_for_one)
-
-  def add_consumer(consumer) do
-    spec = {consumer, []}
-
-    DynamicSupervisor.start_child(__MODULE__, spec)
+  def init(_arg) do
+    children = [%{id: Uploader, Uploader: {Uploader, :start_link, []}, restart: :transient}]
+    opts = [strategy: :one_for_one, subscribe_to: [{Producer, max_demand: 50}]]
+    ConsumerSupervisor.init(children, opts)
   end
 end
