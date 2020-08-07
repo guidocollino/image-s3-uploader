@@ -4,12 +4,14 @@ defmodule ImageUploader.S3Uploader.Consumer do
 
   @demand_wait_time 2_000
 
+
   def start_link(_) do
     GenStage.start(__MODULE__, :state)
   end
 
   def init(state) do
     {:consumer, state, subscribe_to: [{Producer, max_demand: 1}]}
+
   end
 
   def handle_subscribe(:producer, opts, from, _state) do
@@ -56,4 +58,5 @@ defmodule ImageUploader.S3Uploader.Consumer do
 
   defp try_to_demand(true, _producer, _demand), do: []
   defp try_to_demand(false, producer, demand), do: GenStage.ask(producer, demand)
+
 end

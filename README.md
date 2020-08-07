@@ -28,9 +28,9 @@ iex -S mix
 - With this script you can simulate a light load: 1000 images and 10 devices 
 ```console
 > ./test/light_load_test.sh
-``` 
+```
 
 - With this script you can simulate a heavy load: 100000 images and 150 devices 
 ```console
 > ./test/heavy_load_test.sh
-``` 
+```

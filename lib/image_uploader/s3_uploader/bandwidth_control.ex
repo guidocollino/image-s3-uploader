@@ -94,6 +94,7 @@ defmodule ImageUploader.S3Uploader.BandwidthControl do
     {:noreply, new_state}
   end
 
+  @impl true
   def handle_info(
         :print_consumption,
         %State{consumption: consumption, image_process: image_process} = state
