@@ -4,6 +4,7 @@ defmodule ImageUploader.S3Uploader.BandwidthControl do
   and control that no more than the maximum allowed is used
   """
   use GenServer
+  alias ImageUploader.Structs.Image
 
   @name __MODULE__
   @max_bandwidth_consumption_bytes 12000
@@ -22,6 +23,12 @@ defmodule ImageUploader.S3Uploader.BandwidthControl do
   """
   def start_link(_) do
     GenServer.start_link(@name, nil, name: @name)
+  end
+
+  @impl true
+  def init(_) do
+    :timer.send_interval(@logger_time, :print_consumption)
+    {:ok, %State{}}
   end
 
   @doc """
@@ -49,12 +56,6 @@ defmodule ImageUploader.S3Uploader.BandwidthControl do
   ## GenServer Callbacks
 
   @impl true
-  def init(_) do
-    :timer.send_interval(@logger_time, :print_consumption)
-    {:ok, %State{}}
-  end
-
-  @impl true
   def handle_call(
         {:exceeds_bandwidth, file_size},
         _from,
@@ -66,15 +67,14 @@ defmodule ImageUploader.S3Uploader.BandwidthControl do
 
   @impl true
   def handle_call(
-        {:check_and_reserve_bandwidth, image},
+        {:check_and_reserve_bandwidth, %Image{size: image_size} = image},
         {from_pid, _from_term},
         %State{consumption: consumption} = state
       ) do
-    file_size = image[:size_file]
-    if exceeds_bandwidth?(consumption, file_size) do
+    if exceeds_bandwidth?(consumption, image_size) do
       {:reply, :exceeds, state}
     else
-      new_state = sum_bandwidth(file_size, state)
+      new_state = sum_bandwidth(image_size, state)
       Process.send(from_pid, {:send_image, image}, [])
       {:reply, :ok, new_state}
     end

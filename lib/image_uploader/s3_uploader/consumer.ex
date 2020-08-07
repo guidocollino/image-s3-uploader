@@ -1,18 +1,19 @@
 defmodule ImageUploader.S3Uploader.Consumer do
+  @moduledoc """
+  This is a consumer of images to send them to S3,
+  works with manual demand consulting the bandwidth before request more images
+  """
   use GenStage
   alias ImageUploader.S3Uploader.{Producer, BandwidthControl}
+  alias ImageUploader.Structs.Image
 
   @demand_wait_time 2_000
-
 
   def start_link(_) do
     GenStage.start(__MODULE__, :state)
   end
 
-  def init(state) do
-    {:consumer, state, subscribe_to: [{Producer, max_demand: 1}]}
-
-  end
+  def init(state), do: {:consumer, state, subscribe_to: [{Producer, max_demand: 1}]}
 
   def handle_subscribe(:producer, opts, from, _state) do
     demand = opts[:max_demand] || 1
@@ -21,18 +22,18 @@ defmodule ImageUploader.S3Uploader.Consumer do
     {:manual, from}
   end
 
-  def handle_events(events, _from, state) do
-    for event <- events do
-      check_and_send_image(event, nil)
+  def handle_events(images, _from, state) do
+    for image <- images do
+      check_and_send_image(image, nil)
     end
 
     {:noreply, [], state}
   end
 
-  def handle_info({:send_image, image}, producer) do
-    sleep_time = round(image[:size_file] * 0.5)
+  def handle_info({:send_image, %Image{size: image_size}}, producer) do
+    sleep_time = round(image_size * 0.5)
     Process.sleep(sleep_time)
-    BandwidthControl.free_bandwidth(image[:size_file])
+    BandwidthControl.free_bandwidth(image_size)
     {:noreply, [], producer}
   end
 
@@ -58,5 +59,4 @@ defmodule ImageUploader.S3Uploader.Consumer do
 
   defp try_to_demand(true, _producer, _demand), do: []
   defp try_to_demand(false, producer, demand), do: GenStage.ask(producer, demand)
-
 end

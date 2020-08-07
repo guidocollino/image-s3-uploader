@@ -1,6 +1,5 @@
 defmodule ImageUploader.Router do
-  use Plug.Router
-  use Plug.Debugger
+  use Plug.{Debugger, Router}
   require Logger
   # plug(Plug.Logger, log: :debug)
 
@@ -14,7 +13,6 @@ defmodule ImageUploader.Router do
   plug(:dispatch)
 
   post "/api/images/upload" do
-
     {status, message} =
       case conn.body_params do
         %{"device_id" => _device_id, "image" => _image} = params ->
